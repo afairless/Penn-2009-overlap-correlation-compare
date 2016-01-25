@@ -1,0 +1,139 @@
+Sub NonOverlappingCorrelCompare()
+' Andrew Fairless, July 2009
+
+' This program calculates whether two correlations are significantly different when they are correlated with each other.
+' The calculations in this program follow Steiger (1980), Tests for Comparing Elements of a Correlation Matrix, Psychological
+' Bulletin, Vol 87 No 2, 245-251.
+
+' This program takes a correlation matrix, the number of cases covered by the correlations (N), and the two cells containing
+' the correlations to be compared as input.
+
+' This program was modified from an earlier program that was written for a matrix of non-overlapping correlations.
+' This program is appropriate for overlapping correlations
+
+Dim MatrixRange As Range, OtherCorrRange As Range
+Dim OtherCorrArray(1 To 4) As Single
+Dim N As Integer
+Dim Rjk As Variant, Rjh As Variant
+Dim RjkCell As Variant, RjhCell As Variant, RjkMatrixCell As Variant, RjhMatrixCell As Variant
+Dim RjkCellRow As Integer, RjkCellCol As Integer, RjhCellRow As Integer, RjhCellCol As Integer
+Dim MatrixColStart As Integer, MatrixRowStart As Integer
+Dim J As Integer, K As Integer, H As Integer, Dummy As Integer
+Dim MatrixColCount As Integer, MatrixRowCount As Integer
+Dim Rkh As Variant
+Dim Index1 As Integer
+Dim Vertical As Boolean
+
+' This program assumes that a cell of the correlation matrix is highlighted, and that the first row and column of the matrix
+' contain the names of the variables that were correlated.  Two rows above and two rows to the left of the matrix should be
+' empty.  Several columns to the left of the header row should be the N of the data set.
+
+' Locates correlation matrix.
+    Selection.CurrentRegion.Select
+    Set MatrixRange = Selection.CurrentRegion
+    MatrixColCount = MatrixRange.Columns.Count - 1
+    MatrixRowCount = MatrixRange.Rows.Count - 1
+
+' Labels matrix rows with numbers.
+    MatrixRange.Range("A1").Select
+    ActiveCell.Offset(1, -1).Select
+    For Index1 = 1 To MatrixRowCount
+        ActiveCell.Value = Index1
+        ActiveCell.Offset(1, 0).Select
+    Next
+' Labels matrix columns with numbers.
+    MatrixRange.Range("A1").Select
+    ActiveCell.Offset(-1, 1).Select
+    For Index1 = 1 To MatrixColCount
+        ActiveCell.Value = Index1
+        ActiveCell.Offset(0, 1).Select
+    Next
+    
+' Inputs N and the two correlations to be compared.  Color-codes cells containing the 2 correlations.
+    MatrixRange.Range("A1").Select
+    Do While ActiveCell.Value = ""
+        ActiveCell.Offset(0, -1).Select
+    Loop
+    N = ActiveCell.Value
+    ActiveCell.Offset(1, 0).Select
+    Rjk = ActiveCell.Value
+    RjkCell = ActiveCell.Formula
+    ActiveCell.Interior.ColorIndex = 6
+    ActiveCell.Offset(1, 0).Select
+    Rjh = ActiveCell.Value
+    RjhCell = ActiveCell.Formula
+    ActiveCell.Interior.ColorIndex = 45
+    
+    Set OtherCorrRange = Range(ActiveCell.Offset(2, 0), ActiveCell.Offset(5, 0))
+    
+    Range("v1").Value = Rjk
+    Range("v2").Value = RjkCell
+    Range("v3").Value = Rjh
+    Range("v4").Value = RjhCell
+
+' Determines the locations (by row and column) of the cells in the matrix containing the correlations to be compared.
+' The location row and column numbers are both absolute (in reference to entire spreadsheet) and relative to the matrix location.
+    MatrixColStart = MatrixRange.Range("A1").Column
+    MatrixRowStart = MatrixRange.Range("A1").Row
+    RjkCellCol = Range(RjkCell).Column
+    RjkCellRow = Range(RjkCell).Row
+    RjhCellCol = Range(RjhCell).Column
+    RjhCellRow = Range(RjhCell).Row
+    J = RjkCellRow - MatrixRowStart
+    K = RjkCellCol - MatrixColStart
+    Vertical = False
+    H = RjhCellCol - MatrixColStart
+    If (H = J) Or (H = K) Then
+        Vertical = True
+        H = RjhCellRow - MatrixRowStart
+        Dummy = J
+        J = K
+        K = Dummy
+    End If
+    
+    Range("v5").Value = MatrixColStart
+    Range("v6").Value = MatrixRowStart
+    Range("v7").Value = RjkCellCol
+    Range("v8").Value = RjkCellRow
+    Range("v9").Value = RjhCellCol
+    Range("v10").Value = RjhCellRow
+    Range("v11").Value = J
+    Range("v12").Value = K
+    Range("v13").Value = H
+    
+    MatrixRange.Range("B2").Select
+    OtherCorrArray(1) = ActiveCell.Cells(K, H).Value
+    OtherCorrArray(2) = ActiveCell.Cells(K, H).Value
+    OtherCorrArray(3) = ActiveCell.Cells(K, H).Value
+    OtherCorrArray(4) = ActiveCell.Cells(K, H).Value
+    OtherCorrRange = Application.WorksheetFunction.Transpose(OtherCorrArray)
+    
+' Labels and colors the matrix rows and columns according to the variables (as in Steiger, 1980).
+    Range(RjkCell).Interior.ColorIndex = 6
+    Range(RjhCell).Interior.ColorIndex = 45
+    ActiveCell.Cells(J, -2) = "j"
+    ActiveCell.Cells(-2, J) = "j"
+    ActiveCell.Cells(-2, K) = "k"
+    ActiveCell.Cells(K, -2) = "k"
+    ActiveCell.Cells(H, -2) = "h"
+    ActiveCell.Cells(-2, H) = "h"
+    If Vertical = False Then
+        ActiveCell.Cells(J, -2).Interior.ColorIndex = 6
+        ActiveCell.Cells(-2, K).Interior.ColorIndex = 6
+        ActiveCell.Cells(-2, H).Interior.ColorIndex = 45
+'        ActiveCell.Cells(H, K).Interior.ColorIndex = 35
+    Else
+        ActiveCell.Cells(-2, J).Interior.ColorIndex = 6
+        ActiveCell.Cells(K, -2).Interior.ColorIndex = 6
+        ActiveCell.Cells(H, -2).Interior.ColorIndex = 45
+'        ActiveCell.Cells(K, H).Interior.ColorIndex = 35
+    End If
+        
+        ActiveCell.Cells(H, K).Interior.ColorIndex = 35
+    
+    
+'    RjkMatrixCell = Range(RjkCell).Address(False, False, xlR1C1, False, MatrixRange.Range("A1"))
+'    RhmMatrixCell = Range(RhmCell).Address(False, False, xlR1C1, False, MatrixRange.Range("A1"))
+'    Range("g1").Value = N
+
+End Sub
